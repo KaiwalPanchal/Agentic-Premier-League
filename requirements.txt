@@ -1,0 +1,12 @@
+opencv-python
+mediapipe
+numpy
+scikit-learn
+joblib
+requests
+fastapi
+uvicorn
+sqlalchemy
+pydantic-settings
+websockets
+ultralytics
