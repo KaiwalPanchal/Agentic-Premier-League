@@ -1,0 +1,11 @@
+{
+    "high_threshold": -0.10,
+    "x_wrist_height": -0.15,
+    "x_head_proximity": 0.15,
+    "y_spread": 0.35,
+    "y_head_proximity": 0.20,
+    "o_elbow_spread": 0.25,
+    "o_elbow_max": 0.38,
+    "o_wrist_dist": 0.25,
+    "theft_elbow_spread": 0.40
+}

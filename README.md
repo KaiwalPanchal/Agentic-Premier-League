@@ -1,87 +1,80 @@
 # Agentic Premier League — Venue Security Platform
 
-A real-time, AI-powered stadium security platform. The system combines two independent CV pipelines — an overhead **body-pose gesture** silent alert system and a crowd density monitor — unified through a FastAPI event bus and a live React security dashboard.
+A real-time, AI-powered stadium security platform. The system combines two independent CV pipelines — an overhead **body-pose gesture** silent alert system and a crowd density monitor — unified through a FastAPI event bus and a live Next.js security operations center (SOC) dashboard.
 
-## 🚀 System Overview
+## 🚀 Key Features
 
-- **Gesture Pipeline**: Uses MediaPipe Pose to detect 4 specific security gestures held for 5 seconds.
-- **Crowd Pipeline**: Uses YOLOv8 (CUDA) and ByteTrack to monitor zone density and entry/exit counts.
-- **Backend**: FastAPI + SQLite + WebSockets for real-time alert broadcasting.
-- **Dashboard**: React + TypeScript + Vite with live feed, heatmap, and alert management.
+- **Gesture-Based Alerts**: Detects 4 security gestures (Medical, Theft, Lost Person, General Alert) with 5-second hold validation.
+- **Real-Time SOC Dashboard**: High-fidelity interface with live MJPEG camera streams and interactive heatmaps.
+- **Dynamic Awareness**: Browser tab icon and title change color/text instantly based on alert status (Red for Alerts, Amber for Crowd surges).
+- **Unified Event Bus**: FastAPI backend with WebSocket broadcasting for sub-second latency.
+
+---
+
+## 🏃‍♂️ Quick Start
+
+### ⚡ One-Step Launch (Services Only)
+Start both the Backend and the SOC Dashboard with a single command:
+```bash
+python run_platform.py
+```
+
+### 👁️ Start the CV Pipeline
+In a new terminal, launch the gesture analysis:
+```bash
+python cv_pipelines/gesture/alert_router.py
+```
 
 ---
 
 ## 🛠️ Setup Instructions
 
 ### 1. Prerequisites
-- Python 3.9+
-- Node.js 18+
-- NVIDIA GPU with CUDA (recommended for YOLOv8)
-- Webcam (for gesture testing)
+- Python 3.9+ | Node.js 18+
+- NVIDIA GPU with CUDA (recommended)
+- Webcam
 
-### 2. Backend Setup
+### 2. Installation
 ```bash
-# Install dependencies
+# Backend & CV
 pip install -r requirements.txt
 
-# Start the FastAPI server
-python -m uvicorn backend.main:app --reload --port 8000
-```
-
-### 3. CV Pipeline Setup (Gesture)
-To run the gesture detection pipeline:
-```bash
-# Ensure you are in the project root
-python cv_pipelines/gesture/alert_router.py
-```
-*Note: This will open your webcam. Use the calibration tool if needed:*
-```bash
-python cv_pipelines/gesture/calibrate.py --collect general_alert
-python cv_pipelines/gesture/calibrate.py --calibrate
-```
-
-### 4. Dashboard Setup
-```bash
-cd dashboard
+# Frontend
+cd "modern frontend"
 npm install
-npm run dev
 ```
-Navigate to `http://localhost:5173`.
 
 ---
 
-## 🧪 Proof of Working
+## 🧪 Testing the Integration
 
-### 1. Geometric Classifier Validation
-The geometric classifier has been verified against a headless dataset. Results show 100% accuracy on the primary gesture set using default thresholds:
+1.  **Open the Dashboard**: Go to `http://localhost:3000`.
+2.  **Enable Live Feed**: Select **Camera 1**. You should see your webcam stream.
+3.  **Perform a Gesture**: Stand back and perform a gesture (e.g., hands on head for `MEDICAL_EMERGENCY`).
+4.  **Hold for 5s**: Watch the countdown in the CV window.
+5.  **Verify**: The dashboard will show the alert, and the **Browser Tab Icon** will turn red.
 
-```bash
-$ python verify_samples_headless.py
+---
 
-Image Name           | Detected Gesture
----------------------------------------------
-O.jpg                | MEDICAL_EMERGENCY
-theft.jpg            | THEFT_SUSPICIOUS
-X.jpg                | LOST_PERSON
-Y.jpg                | GENERAL_ALERT
-```
+## 🙋‍♂️ Redefining Poses & Calibration
 
-### 2. End-to-End Alert Flow
-When a gesture is held for 5 seconds:
-1. `cv_gesture` classifies the pose.
-2. `AlertRouter` POSTs to `http://localhost:8000/alerts/ingest`.
-3. Backend saves to `venue.db` and broadcasts via WebSocket.
-4. React Dashboard receives the `NEW_ALERT` event and updates the UI in real-time.
+If you need to change or retrain the security gestures:
 
-### 3. Integrated Components
-- **Landmark Extractor**: Hip-normalized 33-landmark 3D coordinate space.
-- **Hold Buffer**: Debounces noise; requires 5 seconds of consistent detection.
-- **WebSocket Manager**: Handles multiple dashboard connections for security ops.
+1. **Collect Samples**:
+   ```bash
+   python cv_pipelines/gesture/calibrate.py --collect [gesture_name]
+   ```
+2. **Recalibrate**:
+   ```bash
+   python cv_pipelines/gesture/calibrate.py --calibrate
+   ```
 
 ---
 
 ## 📂 Project Structure
-- `backend/`: FastAPI application, routers, and SQLite DB models.
-- `cv_pipelines/`: Logic for Gesture (MediaPipe) and Crowd (YOLOv8) analysis.
-- `dashboard/`: Vite-powered React frontend.
-- `sample_dataset/`: Reference images for calibration and verification.
+- `backend/`: FastAPI application, routers, and SQLite DB.
+- `cv_pipelines/`: Logic for Gesture (MediaPipe) and Crowd (YOLOv8).
+- `modern frontend/`: Modern Next.js-powered SOC Dashboard.
+- `models/`: Trained gesture classifiers and rule sets.
+- `data/`: Sample landmark data (.npy) and SQLite database.
+- `dashboard/`: Legacy Vite-powered React frontend (Reference only).

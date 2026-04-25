@@ -57,7 +57,7 @@ export const Dashboard: React.FC = () => {
           <div style={{ flex: '1 1 auto' }}>
             <CameraFeed 
               cameraId="cam_01" 
-              streamUrl="https://upload.wikimedia.org/wikipedia/commons/b/b4/JPEG_example_flower.jpg" // Placeholder for MJPEG stream
+              streamUrl="http://localhost:8000/video/stream" 
               activeAlerts={activeAlerts.filter(a => a.camera_id === 'cam_01')} 
             />
           </div>

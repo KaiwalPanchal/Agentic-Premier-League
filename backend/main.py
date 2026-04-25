@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from backend.db.database import engine, Base
-from backend.routers import alerts, crowd
+from backend.routers import alerts, crowd, video
 import os
 
 # Create database tables
@@ -20,6 +20,7 @@ app.add_middleware(
 
 app.include_router(alerts.router)
 app.include_router(crowd.router)
+app.include_router(video.router)
 
 @app.get("/")
 def read_root():

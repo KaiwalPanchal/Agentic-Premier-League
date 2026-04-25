@@ -6,39 +6,36 @@ import joblib
 class GeometricGestureClassifier:
     """
     Classifies pose by computing landmark geometry ratios.
-
-    Default thresholds are calibrated against the MediaPipe Tasks API
-    (mediapipe >= 0.10) using the sample_dataset images.  Override by
-    supplying a models/gesture_thresholds.json file.
-
-    Threshold meanings
-    ------------------
-    head_proximity  : max wrist-to-nose distance to count as "hands on head"
-    high_threshold  : wrist_height (y, hip-normalised) must be BELOW this
-                      value to count as "hands raised".  Negative = above hip.
-    y_spread        : min wrist-to-wrist distance for the Y / arms-wide pose
-    x_wrist_height  : wrist_height must be ABOVE this for the X (crossed-arms)
-                      pose — arms stay near torso, not fully raised
-    o_elbow_spread  : min elbow horizontal spread for the O / halo pose
-    o_wrist_dist    : max wrist distance for the O pose (wrists close together)
+    Uses optimized rules from models/pose_rules.json if they exist.
     """
-    def __init__(self, thresholds_path="models/gesture_thresholds.json"):
-        # Calibrated defaults (Tasks-API coordinate space, hip-normalised)
+    def __init__(self, thresholds_path="models/gesture_thresholds.json", rules_path="models/pose_rules.json"):
+        # Default fallback thresholds (Tasks-API coordinate space)
         self.t = {
-            "high_threshold":    -0.10,  # raised arms: wrist_height < -0.10
-            "x_wrist_height":    -0.15,  # X: wrist_height must be ABOVE this (near neutral)
-            "x_head_proximity":   0.15,  # X: wrists_near_head must be BELOW this
-            "y_spread":           0.35,  # Y: wrist_dist > 0.35
-            "y_head_proximity":   0.20,  # Y: wrists_near_head < 0.20
-            "o_elbow_spread":     0.25,  # O: elbow_spread > 0.25
-            "o_elbow_max":       0.38,  # O: elbow_spread must be BELOW this (not too wide)
-            "theft_elbow_spread": 0.40,  # theft: elbow_spread > 0.40
+            "high_threshold":    -0.10,
+            "x_wrist_height":    -0.15,
+            "x_head_proximity":   0.15,
+            "y_spread":           0.35,
+            "y_head_proximity":   0.20,
+            "o_elbow_spread":     0.25,
+            "o_elbow_max":       0.38,
+            "o_wrist_dist":      0.25,
+            "theft_elbow_spread": 0.40,
         }
+        self.optimized_rules = {}
+        
+        # Load optimized rules first (priority)
+        if os.path.exists(rules_path):
+            try:
+                with open(rules_path) as f:
+                    self.optimized_rules = json.load(f)
+                print(f"[*] Loaded {len(self.optimized_rules)} optimized rules from {rules_path}")
+            except Exception as e:
+                print(f"Error loading optimized rules: {e}")
+
+        # Load standard thresholds (legacy support)
         if os.path.exists(thresholds_path):
             with open(thresholds_path) as f:
-                self.t = json.load(f)
-        else:
-            print(f"Warning: {thresholds_path} not found. Using default thresholds.")
+                self.t.update(json.load(f))
 
     def predict(self, landmarks) -> str:
         if not landmarks:
@@ -49,31 +46,55 @@ class GeometricGestureClassifier:
         l_elbow, r_elbow = lms[13], lms[14]
         nose             = lms[0]
 
-        wrist_dist       = np.linalg.norm(l_wrist - r_wrist)
-        wrist_height     = (l_wrist[1] + r_wrist[1]) / 2   # negative = above hip
-        elbow_spread     = abs(l_elbow[0] - r_elbow[0])
-        wrists_near_head = np.linalg.norm((l_wrist + r_wrist) / 2 - nose)
-        wrists_crossed   = l_wrist[0] > r_wrist[0]
+        # Extract features (Matching the order in pose_optimizer.py)
+        # 0: Wrist Dist, 1: Wrist Height, 2: Elbow Spread, 3: Wrist-Head Prox
+        features = [
+            np.linalg.norm(l_wrist - r_wrist),
+            (l_wrist[1] + r_wrist[1]) / 2,
+            abs(l_elbow[0] - r_elbow[0]),
+            np.linalg.norm((l_wrist + r_wrist) / 2 - nose)
+        ]
 
-        # --- Rule priority: most-specific first ---
+        # --- Priority 1: Optimized Personalized Rules ---
+        if self.optimized_rules:
+            for label, conditions in self.optimized_rules.items():
+                is_match = True
+                for feat_idx, op, threshold in conditions:
+                    val = features[feat_idx]
+                    if op == "<" and not (val < threshold):
+                        is_match = False; break
+                    if op == ">" and not (val > threshold):
+                        is_match = False; break
+                
+                if is_match:
+                    # Map simplified labels to system alert types if needed
+                    # e.g., if you saved as 'y', return 'general_alert'
+                    label_map = {
+                        "y": "general_alert",
+                        "o": "medical_emergency",
+                        "x": "lost_person",
+                        "theft": "theft_suspicious"
+                    }
+                    return label_map.get(label.lower(), label)
 
-        # 1. X shape — arms crossed near chest, wrists very close to face/nose area
-        #    Observed: wrists_near_head~0.14, wrist_dist~0.09, wrist_height~0.0
+        # --- Priority 2: Standard Rule-Based Logic (Fallback) ---
+        wrist_dist, wrist_height, elbow_spread, wrists_near_head = features
+        wrists_crossed = l_wrist[0] > r_wrist[0]
+
+        # 1. X shape
         if (wrists_crossed
                 and wrist_height > self.t.get("x_wrist_height", -0.15)
                 and wrists_near_head < self.t.get("x_head_proximity", 0.15)
                 and wrist_dist < 0.20):
             return "lost_person"
 
-        # 2. Y shape — arms wide apart, raised, wrists near head range
-        #    Observed: wrist_dist~0.42, wrist_height~-0.19, wrists_near_head~0.10
+        # 2. Y shape
         if (wrist_dist > self.t.get("y_spread", 0.35)
                 and wrist_height < self.t.get("high_threshold", -0.10)
                 and wrists_near_head < self.t.get("y_head_proximity", 0.20)):
             return "general_alert"
 
-        # 3. O / halo shape — elbows moderately wide, wrists close, arms raised, wrists NOT near face
-        #    Observed: elbow_spread~0.31, wrist_dist~0.16, wrist_height~-0.36
+        # 3. O / halo shape
         if (elbow_spread > self.t.get("o_elbow_spread", 0.25)
                 and elbow_spread < self.t.get("o_elbow_max", 0.38)
                 and wrist_dist < self.t.get("o_wrist_dist", 0.25)
@@ -81,9 +102,7 @@ class GeometricGestureClassifier:
                 and wrists_near_head > self.t.get("y_head_proximity", 0.20)):
             return "medical_emergency"
 
-        # 4. Theft-suspicious — hands on/near head but wrists further from nose midpoint
-        #    (person covering head, grabbing someone, etc.)
-        #    Observed: wrists_near_head~0.54, wrist_height~-0.38, elbow_spread~0.46
+        # 4. Theft-suspicious
         if (wrist_height < self.t.get("high_threshold", -0.10)
                 and elbow_spread > self.t.get("theft_elbow_spread", 0.40)
                 and wrists_near_head > self.t.get("y_head_proximity", 0.20)):
