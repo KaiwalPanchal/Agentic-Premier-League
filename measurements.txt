@@ -1,0 +1,109 @@
+[Video Stream Started] - Look at the OpenCV window.
+
+=== POSE OPTIMIZER COMMANDS ===
+  save <name>  : Records 30 frames for a pose
+  optimize     : Calculates optimal thresholds
+  quit         : Exit tool
+W0000 00:00:1777125137.045828   11560 landmark_projection_calculator.cc:81] Using NORM_RECT without IMAGE_DIMENSIONS is only supported for the square ROI. Provide IMAGE_DIMENSIONS or use PROJECTION_MATRIX.
+save Y
+
+[*] Hold your pose for 'Y'...
+
+[+] Captured 'Y'. Ready for next command.
+save O
+
+[*] Hold your pose for 'O'...
+
+[+] Captured 'O'. Ready for next command.
+save X
+
+[*] Hold your pose for 'X'...
+
+[+] Captured 'X'. Ready for next command.
+save theft
+
+[*] Hold your pose for 'theft'...
+
+[+] Captured 'theft'. Ready for next command.
+optimise
+Unknown command: optimise
+optimize
+
+========================================
+OPTIMIZING POSE BOUNDARIES
+========================================
+
+Pose: Y
+  - Wrist Dist     :  0.253 (std: 0.020)
+  - Wrist Height   : -0.300 (std: 0.003)
+  - Elbow Spread   :  0.163 (std: 0.002)
+  - Wrist-Head Prox:  0.157 (std: 0.040)
+
+Pose: O
+  - Wrist Dist     :  0.076 (std: 0.007)
+  - Wrist Height   : -0.335 (std: 0.003)
+  - Elbow Spread   :  0.139 (std: 0.001)
+  - Wrist-Head Prox:  0.098 (std: 0.007)
+
+Pose: X
+  - Wrist Dist     :  0.077 (std: 0.026)
+  - Wrist Height   : -0.309 (std: 0.003)
+  - Elbow Spread   :  0.066 (std: 0.001)
+  - Wrist-Head Prox:  0.094 (std: 0.006)
+
+Pose: THEFT
+  - Wrist Dist     :  0.101 (std: 0.032)
+  - Wrist Height   : -0.222 (std: 0.013)
+  - Elbow Spread   :  0.168 (std: 0.004)
+  - Wrist-Head Prox:  0.207 (std: 0.058)
+
+========================================
+GENERATED NON-MERGING RULES
+========================================
+
+[Y]
+  IF Elbow Spread > 0.115
+  IF Wrist Height < -0.261
+  IF Elbow Spread > 0.151
+
+[O]
+  IF Elbow Spread < 0.151
+  IF Elbow Spread > 0.102
+  IF Wrist Height < -0.279
+
+[X]
+  IF Elbow Spread < 0.115
+  IF Elbow Spread < 0.117
+  IF Elbow Spread < 0.102
+
+[THEFT]
+  IF Elbow Spread > 0.117
+  IF Wrist Height > -0.261
+  IF Wrist Height > -0.279
+
+
+│ Done.                                                                                                                                                │
+│ Service [apl-backend] revision [apl-backend-00001-lxp] has been deployed and is serving 100 percent of traffic.                                      │
+│ Service URL: https://apl-backend-330345669175.us-central1.run.app                                                                                    │
+│ https://apl-backend-gptlfqcuna-uc.a.run.app     
+
+
+      1 BACKEND_URL=https://apl-backend-gptlfqcuna-uc.a.run.app
+      2 NEXT_PUBLIC_API_URL=https://apl-backend-gptlfqcuna-uc.a.run.app
+      3 NEXT_PUBLIC_WS_URL=wss://apl-backend-gptlfqcuna-uc.a.run.app
+      4 CAMERA_SOURCE=0
+      5 CLASSIFIER_MODE=geometric
+      6 ZONE_DENSITY_LIMIT=50
+
+
+
+✦ The deployment to Google Cloud Platform is complete! Your Agentic Premier League platform is now live and serverless.
+
+  🚀 Live URLs
+   * SOC Dashboard (Frontend): https://apl-frontend-330345669175.us-central1.run.app (https://apl-frontend-330345669175.us-central1.run.app)
+   * API Documentation (Backend): https://apl-backend-gptlfqcuna-uc.a.run.app/docs (https://apl-backend-gptlfqcuna-uc.a.run.app/docs)
+
+  ---
+
+
+

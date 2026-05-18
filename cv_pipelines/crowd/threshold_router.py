@@ -1,5 +1,6 @@
 import time
 import requests
+import os
 from datetime import datetime
 
 class CrowdThresholdRouter:
@@ -7,9 +8,10 @@ class CrowdThresholdRouter:
     Monitors zone densities and dwell times.
     Sends alerts to backend if thresholds are breached.
     """
-    def __init__(self, api_url="http://localhost:8000/alerts/ingest", density_url="http://localhost:8000/crowd/density", camera_id="cam_01"):
-        self.api_url = api_url
-        self.density_url = density_url
+    def __init__(self, api_url=None, density_url=None, camera_id="cam_01"):
+        base_url = os.environ.get("BACKEND_URL", "http://localhost:8000").rstrip("/")
+        self.api_url = api_url or f"{base_url}/alerts/ingest"
+        self.density_url = density_url or f"{base_url}/crowd/density"
         self.camera_id = camera_id
         
         self.zone_limits = {"A1": 5} # Default test limit

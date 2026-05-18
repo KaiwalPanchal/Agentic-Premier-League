@@ -1,10 +1,15 @@
 import requests
 import json
+import os
 from datetime import datetime
 
 class AlertRouter:
-    def __init__(self, api_url="http://localhost:8000/alerts/ingest", camera_id="cam_01"):
-        self.api_url = api_url
+    def __init__(self, api_url=None, camera_id="cam_01"):
+        if api_url is None:
+            base_url = os.environ.get("BACKEND_URL", "http://localhost:8000").rstrip("/")
+            self.api_url = f"{base_url}/alerts/ingest"
+        else:
+            self.api_url = api_url
         self.camera_id = camera_id
 
     def send_alert(self, label: str, confidence: float = 1.0, zone: str = "Unknown", snapshot_path: str = None):

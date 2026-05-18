@@ -1,0 +1,25 @@
+.gcloudignore
+.git
+.gitignore
+node_modules/
+modern frontend/node_modules/
+dashboard/node_modules/
+.next/
+dist/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+.env.local
+.vscode/
+.idea/
+*.task
+*.npy
+*.pkl
+pose_landmarker_heavy.task
+sample_dataset/
+deploy/
+implementation_plan.md
+README.md
+requirements.txt.old
