@@ -1,0 +1,14 @@
+.env
+.env.*
+!.env.example
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+measurements.txt
+data/venue.db
+venv/
+.venv/
+node_modules/
+.next/
